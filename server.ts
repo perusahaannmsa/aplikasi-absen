@@ -39,6 +39,12 @@ import {
   DEFAULT_INDONESIAN_HOLIDAYS_2026,
   HolidayEntry,
 } from "./server/holidays";
+import {
+  STORAGE_DIR,
+  DATA_FILE,
+  safeWriteFileSync,
+  safeReadFileSync,
+} from "./server/storage";
 
 dotenv.config();
 
@@ -50,9 +56,6 @@ const PORT = 3000;
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
-
-const STORAGE_DIR = process.env.STORAGE_DIR || process.env.RAILWAY_VOLUME_MOUNT_PATH || process.cwd();
-const DATA_FILE = path.join(STORAGE_DIR, "data-store.json");
 
 // Helper: Jakarta Date string (YYYY-MM-DD)
 function getJakartaDateStr(): string {
@@ -105,8 +108,8 @@ function getMondayDateStr(dateStr: string): string {
 function readState(): any {
   const todayDate = getJakartaDateStr();
   try {
-    if (fs.existsSync(DATA_FILE)) {
-      const raw = fs.readFileSync(DATA_FILE, "utf-8");
+    const raw = safeReadFileSync(DATA_FILE);
+    if (raw) {
       const parsed = JSON.parse(raw);
       let changed = false;
 
@@ -182,7 +185,7 @@ function readState(): any {
       }
 
       if (changed) {
-        fs.writeFileSync(DATA_FILE, JSON.stringify(parsed, null, 2), "utf-8");
+        safeWriteFileSync(DATA_FILE, JSON.stringify(parsed, null, 2));
       }
       return parsed;
     }
@@ -212,12 +215,12 @@ function readState(): any {
     },
     botMessageLogs: [],
   };
-  fs.writeFileSync(DATA_FILE, JSON.stringify(initial, null, 2), "utf-8");
+  safeWriteFileSync(DATA_FILE, JSON.stringify(initial, null, 2));
   return initial;
 }
 
 function writeState(state: any) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(state, null, 2), "utf-8");
+  safeWriteFileSync(DATA_FILE, JSON.stringify(state, null, 2));
 }
 
 // ==================== API ROUTES ====================

@@ -7,8 +7,7 @@ import {
   HolidayEntry,
   DayStatusCheckResult,
 } from "./holidays.js";
-
-const DATA_FILE = path.join(process.cwd(), "data-store.json");
+import { DATA_FILE, safeWriteFileSync, safeReadFileSync } from "./storage";
 
 // Shared GenAI client with required User-Agent header
 let aiClient: GoogleGenAI | null = null;
@@ -28,9 +27,10 @@ function getAiClient(): GoogleGenAI {
 
 // Read current data store
 export function readDataStore(): any {
-  if (fs.existsSync(DATA_FILE)) {
+  const content = safeReadFileSync(DATA_FILE);
+  if (content) {
     try {
-      return JSON.parse(fs.readFileSync(DATA_FILE, "utf-8"));
+      return JSON.parse(content);
     } catch (e) {
       console.error("Failed to read data-store.json:", e);
     }
@@ -40,11 +40,7 @@ export function readDataStore(): any {
 
 // Write to data store
 export function writeDataStore(data: any): void {
-  try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), "utf-8");
-  } catch (e) {
-    console.error("Failed to write data-store.json:", e);
-  }
+  safeWriteFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
 // Jakarta Date helper (YYYY-MM-DD)

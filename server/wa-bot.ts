@@ -47,15 +47,20 @@ const getBrowsers = () => {
   return (pkg as any).Browsers;
 };
 
+import {
+  STORAGE_DIR,
+  DATA_FILE,
+  safeWriteFileSync,
+  safeReadFileSync,
+} from "./storage";
+
 const makeWASocket = getMakeWASocket();
 const useMultiFileAuthState = getUseMultiFileAuthState();
 const DisconnectReason = getDisconnectReason();
 const Browsers = getBrowsers();
 
-const STORAGE_DIR = process.env.STORAGE_DIR || process.env.RAILWAY_VOLUME_MOUNT_PATH || process.cwd();
 const AUTH_DIR = path.join(STORAGE_DIR, "auth_info_baileys");
 const BACKUP_CREDS_FILE = path.join(STORAGE_DIR, "auth_backup_creds.json");
-const DATA_FILE = path.join(STORAGE_DIR, "data-store.json");
 
 // Bot global state
 let sock: any = null;
@@ -480,7 +485,7 @@ export async function broadcastAttendanceLinks(options: BroadcastOptions): Promi
   if (state.botMessageLogs.length > 200) {
     state.botMessageLogs = state.botMessageLogs.slice(0, 200);
   }
-  fs.writeFileSync(DATA_FILE, JSON.stringify(state, null, 2), "utf-8");
+  safeWriteFileSync(DATA_FILE, JSON.stringify(state, null, 2));
 
   return { count: sentCount, logs: newLogs };
 }
@@ -666,7 +671,7 @@ export async function initWhatsApp(forceNew = false) {
               });
 
               state.attendanceRecords = records;
-              fs.writeFileSync(DATA_FILE, JSON.stringify(state, null, 2), "utf-8");
+              safeWriteFileSync(DATA_FILE, JSON.stringify(state, null, 2));
 
               const responseText = `✅ *Presensi Hadir Diterima!* 🎉\n` +
                 `Halo *${workerName}*, presensi kehadiran (Hadir) Anda hari ini tanggal *${todayDate}* berhasil dicatat.\n\n` +
@@ -732,7 +737,7 @@ export async function initWhatsApp(forceNew = false) {
               });
 
               state.attendanceRecords = records;
-              fs.writeFileSync(DATA_FILE, JSON.stringify(state, null, 2), "utf-8");
+              safeWriteFileSync(DATA_FILE, JSON.stringify(state, null, 2));
 
               await sock.sendMessage(senderJid, {
                 text: `✅ *Status Presensi Dicatat!*\nHalo *${workerName}*, status presensi Anda hari ini telah dicatat sebagai *${selectedStatus}*.\n\nJika ingin memperbarui, Anda dapat membagikan Live Location Anda saat sudah di kantor.`,
