@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper to check authentication
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Users collection rules
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Attendance records rules
+    match /attendance_records/{recordId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Default test / status collection
+    match /test/{docId} {
+      allow read, write: if true;
+    }
+  }
+}
